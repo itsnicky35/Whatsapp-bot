@@ -5,15 +5,11 @@ from fuzzywuzzy import fuzz
 
 app = Flask(__name__)
 
-# Hardcoded Twilio credentials and WhatsApp number
 TWILIO_ACCOUNT_SID = "ACd8946de20bbdeaecac5b3ddc9bd956ba"
 TWILIO_AUTH_TOKEN = "0a9755806d8592e27bc0b4b315e59da4"
 TWILIO_WHATSAPP_NUMBER = "whatsapp:+14155238886"
-
-# In-memory user session tracker
 user_sessions = {}
 
-# Pizza menu and size options
 pizza_menu = {
     "1": "Veg Pizza",
     "2": "Non-Veg Pizza",
@@ -26,7 +22,6 @@ size_menu = {
     "3": "Large"
 }
 
-# Reset user session
 def reset_session(user_id):
     user_sessions[user_id] = {
         "step": "greeted",
@@ -35,7 +30,7 @@ def reset_session(user_id):
         "address": None
     }
 
-# Handle conversation logic
+
 def handle_user_message(user_id, msg):
     msg = msg.strip().lower()
     session = user_sessions.get(user_id, {})
@@ -43,65 +38,65 @@ def handle_user_message(user_id, msg):
 
     if not session:
         reset_session(user_id)
-        return "👋 Welcome to *Pizza Planet*! Type *menu* to see our pizza options."
+        return "Welcome to Pizza Planet! Type 'menu' to see our pizza options."
 
     if step == "greeted":
         if "menu" in msg:
             session["step"] = "waiting_for_pizza"
-            return "📋 *Pizza Menu:*\n1️⃣ Veg Pizza\n2️⃣ Non-Veg Pizza\n3️⃣ Cheese Burst Pizza\n\nType the number to select."
+            return "Pizza Menu:\n1. Veg Pizza\n2. Non-Veg Pizza\n3. Cheese Burst Pizza\n\nType the number to select."
         elif fuzz.partial_ratio(msg, "bye") > 70:
             reset_session(user_id)
-            return "👋 Goodbye! Come back soon for more pizza!"
+            return "Goodbye! Come back soon for more pizza!"
         else:
-            return "❓ Please type *menu* to begin your order."
+            return "Please type 'menu' to begin your order."
 
     elif step == "waiting_for_pizza":
         if msg in pizza_menu:
             session["pizza"] = pizza_menu[msg]
             session["step"] = "waiting_for_size"
-            return f"🍕 You chose *{pizza_menu[msg]}*. Now select a size:\n1️⃣ Small\n2️⃣ Medium\n3️⃣ Large"
+            return f"You chose {pizza_menu[msg]}. Now select a size:\n1. Small\n2. Medium\n3. Large"
         else:
-            return "⚠️ Invalid choice. Type 1, 2, or 3 to choose a pizza."
+            return "Invalid choice. Type 1, 2, or 3 to choose a pizza."
 
     elif step == "waiting_for_size":
         if msg in size_menu:
             session["size"] = size_menu[msg]
             session["step"] = "waiting_for_address"
-            return f"📏 *{size_menu[msg]}* size selected.\n🏠 Please enter your delivery address."
+            return f"{size_menu[msg]} size selected.\nPlease enter your delivery address."
         else:
-            return "⚠️ Invalid size. Type 1, 2, or 3 to select size."
+            return "Invalid size. Type 1, 2, or 3 to select size."
 
     elif step == "waiting_for_address":
         session["address"] = msg
         session["step"] = "order_confirmed"
-        return (f"✅ Your order is confirmed!\n\n"
-                f"🧾 *Order Summary:*\n"
+        return (f"Your order is confirmed!\n\n"
+                f"Order Summary:\n"
                 f"Pizza: {session['pizza']}\n"
                 f"Size: {session['size']}\n"
                 f"Address: {session['address']}\n\n"
-                f"🚚 Your pizza will arrive in 30 minutes!\n\n"
-                f"Type *menu* to place another order or *bye* to exit.")
+                f"Your pizza will arrive in 30 minutes.\n\n"
+                f"Type 'menu' to place another order or 'bye' to exit.")
 
     elif step == "order_confirmed":
         if "menu" in msg:
             reset_session(user_id)
-            return "📋 *Pizza Menu:*\n1️⃣ Veg Pizza\n2️⃣ Non-Veg Pizza\n3️⃣ Cheese Burst Pizza\n\nType the number to select."
+            return "Pizza Menu:\n1. Veg Pizza\n2. Non-Veg Pizza\n3. Cheese Burst Pizza\n\nType the number to select."
         elif "bye" in msg:
             reset_session(user_id)
-            return "👋 Goodbye! Enjoy your pizza!"
+            return "Goodbye! Enjoy your pizza!"
         else:
-            return "🙂 Want another order? Type *menu* or *bye* to end."
+            return "Want another order? Type 'menu' or 'bye' to end."
 
     else:
         reset_session(user_id)
-        return "🤖 Let's start over. Type *menu* to begin your order."
+        return "Let's start over. Type 'menu' to begin your order."
 
-# Webhook route
+
 @app.route("/webhook", methods=["POST"])
 def whatsapp_webhook():
     incoming_msg = request.values.get("Body", "")
     sender = request.values.get("From", "")
-    print(f"📩 Message from {sender}: {incoming_msg}")
+    print(f"Message from {sender}: {incoming_msg}")
 
     reply = handle_user_message(sender, incoming_msg)
 
@@ -109,7 +104,7 @@ def whatsapp_webhook():
     resp.message(reply)
     return str(resp)
 
-# ✅ Status endpoint
+
 @app.route("/status", methods=["GET"])
 def status():
     return jsonify({
@@ -117,7 +112,7 @@ def status():
         "message": "Pizza bot is online and ready to serve!"
     }), 200
 
-# Run the Flask app
+
 if __name__ == "__main__":
-    print("🚀 Pizza Bot is running on http://localhost:5001")
+    print("Pizza Bot is running on http://localhost:5001")
     app.run(port=5001, debug=True)
