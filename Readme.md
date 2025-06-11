@@ -26,7 +26,7 @@ A simple and interactive **WhatsApp bot built with Flask and Twilio** that lets 
 
 ![Pizza Order Confirmation](pics/pic2.png)
 
-> 📝 Save these images in a `screenshots/` folder in your project directory.
+> 📝 Save these images in a `pics/` folder in your project directory.
 
 ---
 
